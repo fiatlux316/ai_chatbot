@@ -19,7 +19,7 @@ def chat(messages):
     brand_id = 'EM'
     index = brand_id + '_chunk'
     response = None
-    print("messages :", messages)
+    #print("messages :", messages)
 
     #query = messages[0]['content']
     query = messages[-1]['content'] # 대화 이력 중 가장 마지막 메시지(최신 질문)를 가져옵니다.
@@ -70,7 +70,7 @@ def chat(messages):
                 #print("guide :", guide)
 
                 system_prompt = system_prompt + '\n\n' +guide
-                print("system_prompt :", system_prompt)
+                #print("system_prompt :", system_prompt)
 
                 user_prompt = f"[검색된 FAQ Context]\n{context_text}\n[사용자 질문]: {query}"
                 
