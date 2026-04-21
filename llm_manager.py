@@ -1,10 +1,18 @@
 import json
 import boto3
 import os
+from pathlib import Path
 
 from openai import OpenAI
 import google.generativeai as genai
 
+from dotenv import load_dotenv
+
+# env/secret.env 파일 로드
+env_path = Path(__file__).parent / "env" / "secret.env"
+result = load_dotenv(env_path, override=True)
+#print(f"🔍 load_dotenv result: {result}")
+#print(f"🔍 GEMINI_API_KEY: {os.environ.get('GEMINI_API_KEY')}")
 
 class LLMManager:
     def __init__(self, provider: str = "sonnet"):
@@ -25,6 +33,7 @@ class LLMManager:
         elif self.provider == "gemini":
             print("LLM Provider로 Gemini가 선택되었습니다.")
             api_key = os.environ.get("GEMINI_API_KEY")
+            print("gemini api_key:", api_key)
             genai.configure(api_key=api_key)
             self.llm_client = genai
         else:
