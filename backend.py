@@ -19,7 +19,7 @@ def chat(messages):
     brand_id = 'EM'
     index = brand_id + '_chunk'
     response = None
-    print("messages :", messages)
+    #print("messages :", messages)
 
     #query = messages[0]['content']
     query = messages[-1]['content'] # 대화 이력 중 가장 마지막 메시지(최신 질문)를 가져옵니다.
@@ -28,7 +28,7 @@ def chat(messages):
     # 고객요청 메세지를 최근 순으로 최대 지정된 갯수만큼 저장하여,  멀티턴 대화에 대응할 수 있도록 합니다.
     # 메제기가 넘어올때마다 저장하여 최근 대화 이력을 유지하는 방식으로, 고객의 추가 질문이나 보완 질문이 있을 때 이전 맥락을 고려하여 연속성 있는 답변을 제공할 수 있습니다.
     query_history.append(query)
-    print("query_history :", query_history)
+    #print("query_history :", query_history)
 
     # 최근 5개 질문을 하나의 스트링으로 저장 
     query = ' '.join(query_history[-5:])
@@ -70,7 +70,7 @@ def chat(messages):
                 #print("guide :", guide)
 
                 system_prompt = system_prompt + '\n\n' +guide
-                print("system_prompt :", system_prompt)
+                #print("system_prompt :", system_prompt)
 
                 user_prompt = f"[검색된 FAQ Context]\n{context_text}\n[사용자 질문]: {query}"
                 
