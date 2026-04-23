@@ -25,7 +25,7 @@ class LLMManager:
             # AWS Bedrock Client (Sonnet)
             self.llm_client = boto3.client(
                 service_name='bedrock-runtime', 
-                region_name=os.environ.get("AWS_SEO_REGION")
+                region_name=os.environ.get("BEDROCK_REGION")
             )
         elif self.provider == "chatgpt":
             print("LLM Provider로 ChatGPT가 선택되었습니다.")
@@ -72,8 +72,8 @@ class LLMManager:
         # response_body = json.loads(llm_response.get('body').read())
         # return response_body.get('content')[0].get('text')
     
-        model_id = os.environ.get("SEO_LLM_MODEL")
-        aws_region = os.environ.get("AWS_SEO_REGION")
+        model_id = os.environ.get("BEDROCK_MODEL")
+        aws_region = os.environ.get("BEDROCK_REGION")
 
         sys_prompt = [{"text": system_prompt}]
         usr_prompt = [{"role": "user", "content": [{"text": user_prompt}]}]
