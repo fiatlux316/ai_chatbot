@@ -25,7 +25,7 @@ class LLMManager:
             # AWS Bedrock Client (Sonnet)
             self.llm_client = boto3.client(
                 service_name='bedrock-runtime', 
-                region_name='us-west-2'
+                region_name=os.environ.get("AWS_SEO_REGION")
             )
         elif self.provider == "chatgpt":
             print("LLM Provider로 ChatGPT가 선택되었습니다.")
@@ -53,24 +53,48 @@ class LLMManager:
     def _call_bedrock_sonnet(self, system_prompt: str, user_prompt: str) -> str:
         print('_call_bedrock_sonnet - user_prompt :', user_prompt)
         
-        model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
-        body = json.dumps({
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 1024,
-            "temperature": 0.0,
-            "system": system_prompt,
-            "messages": [{"role": "user", "content": user_prompt}]
-        })
+        # model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+        # body = json.dumps({
+        #     "anthropic_version": "bedrock-2023-05-31",
+        #     "max_tokens": 1024,
+        #     "temperature": 0.0,
+        #     "system": system_prompt,
+        #     "messages": [{"role": "user", "content": user_prompt}]
+        # })
 
-        llm_response = self.llm_client.invoke_model(
-            body=body,
-            modelId=model_id,
-            accept="application/json",
-            contentType="application/json"
-        )
+        # llm_response = self.llm_client.invoke_model(
+        #     body=body,
+        #     modelId=model_id,
+        #     accept="application/json",
+        #     contentType="application/json"
+        # )
         
-        response_body = json.loads(llm_response.get('body').read())
-        return response_body.get('content')[0].get('text')
+        # response_body = json.loads(llm_response.get('body').read())
+        # return response_body.get('content')[0].get('text')
+    
+        model_id = os.environ.get("SEO_LLM_MODEL")
+        aws_region = os.environ.get("AWS_SEO_REGION")
+
+        sys_prompt = [{"text": system_prompt}]
+        usr_prompt = [{"role": "user", "content": [{"text": user_prompt}]}]
+
+        temperature = 0.0
+        top_p = 0.1
+        top_k = 1
+        inference_config = {"temperature": temperature, "topP": top_p , "maxTokens": 8000 }
+        additional_model_fields = {"top_k": top_k}
+        if aws_region == "us-east-1":
+            additional_model_fields["anthropic_beta"] = ["context-1m-2025-08-07"]
+
+        response = self.llm_client.converse(
+            modelId=model_id,
+            messages=usr_prompt,
+            system=sys_prompt,
+            inferenceConfig=inference_config,
+            additionalModelRequestFields=additional_model_fields
+        )
+        return response['output']['message']['content'][0]['text']
+    
 
     def _call_openai_chatgpt(self, system_prompt: str, user_prompt: str) -> str:
 

@@ -6,7 +6,7 @@ import json
 from llm_manager import LLMManager
 from vs_manager import VectorStoreManager
 
-llm_provider = "gemini" # "sonnet" 또는 "chatgpt", "gemini"로 LLM 제공자를 선택할 수 있습니다.
+llm_provider = "sonnet" # "sonnet" 또는 "chatgpt", "gemini"로 LLM 제공자를 선택할 수 있습니다.
 vs_provider = "chroma" # "opensearch" 또는 "chroma"로 벡터 저장소 제공자를 선택할 수 있습니다.
 
 llm_manager = LLMManager(provider=llm_provider)
@@ -82,7 +82,8 @@ def chat(messages):
                 print("response :", response)
 
     except Exception as e:
-        err = str(e).split(" ")[0]
+        err = str(e) #.split(" ")[0]
+        print(f"Error occurred: {err}")
         response = "예기치 않은 에러가 발생했습니다.  잠시 후  다시 시도해 주세요." + '\n' + f'(에러: {err})'
         pass
 
