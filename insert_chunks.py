@@ -35,7 +35,7 @@ def load_and_chunk_documents(doc_dir="docs", chunk_size=500, chunk_overlap=50):
                 print(f"Error loading TXT {filename}: {e}")
 
     if not documents:
-        print("읽어들일 문서가 없습니다.")
+        print("읽어들일 문서가 없습니다. pdf 또는 txt 파일이 docs 폴더에 존재하는지 확인해주세요.")
         return []
 
     # 2. Chunking (일정 길이로 자르기)
