@@ -32,10 +32,11 @@ system_prompt = base_prompt + '\n\n' + cs_guide
 
 def chat(messages):
 
+    #print("====> messages :", messages)
+
     brand_id = 'EM'
     index = brand_id + '_chunk'
     response = None
-    #print("messages :", messages)
 
     #query = messages[0]['content']
     query = messages[-1]['content'] # 대화 이력 중 가장 마지막 메시지(최신 질문)를 가져옵니다.
@@ -46,8 +47,8 @@ def chat(messages):
     query_history.append(query)
     #print("query_history :", query_history)
 
-    # 최근 5개 질문을 하나의 스트링으로 저장 
-    query = ' '.join(query_history[-5:])
+    # 최근 3개 질문을 하나의 스트링으로 저장 
+    query = ' '.join(query_history[-3:])
     print("query_final :", query)
 
     try:    
