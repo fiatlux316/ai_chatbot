@@ -4,4 +4,7 @@ __pycache__/
 backup
 chroma_db/
 multilingual-e5-large-quantized/
-env/secret.env
+.env
+.ipynb_checkpoints/
+.venv
+

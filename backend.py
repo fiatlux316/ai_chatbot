@@ -1,16 +1,16 @@
 from typing import List
 from fastapi import FastAPI
 from pydantic import BaseModel
-import json
+import os
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from llm_manager import LLMManager
 from vs_manager import VectorStoreManager
 
-llm_provider = "sonnet" # "sonnet" 또는 "chatgpt", "gemini"로 LLM 제공자를 선택할 수 있습니다.
-vs_provider = "chroma" # "opensearch" 또는 "chroma"로 벡터 저장소 제공자를 선택할 수 있습니다.
-
-llm_manager = LLMManager(provider=llm_provider)
-vs_manager = VectorStoreManager(provider=vs_provider)
+llm_manager = LLMManager(provider=os.getenv("LLM_MODEL", "claude"))
+vs_manager = VectorStoreManager(provider=os.getenv("VS_TYPE", "chroma"))
 
 query_history = []
 cs_guide = ''

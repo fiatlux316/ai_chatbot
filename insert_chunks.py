@@ -1,7 +1,9 @@
 import os
-# 필요한 패키지: pip install langchain langchain-community pypdf
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from vs_manager import VectorStoreManager
 
@@ -16,8 +18,7 @@ def load_and_chunk_documents(doc_dir="docs", chunk_size=500, chunk_overlap=50):
     for filename in os.listdir(doc_dir):
         file_path = os.path.join(doc_dir, filename)
         #print(f"Processing file: {filename}")
-
-        
+ 
         if filename.endswith(".pdf"):
             try:
                 loader = PyPDFLoader(file_path)
@@ -67,8 +68,7 @@ if __name__ == "__main__":
     )
     
     if chunks:
-        # 3. 사용할 Vector DB Provider 선택 ("opensearch" 또는 "chroma")
-        PROVIDER = "chroma" 
+        PROVIDER = os.getenv("VS_TYPE", "chroma")
         
         # type : opensearch, chroma 중 선택
         vs_manager = VectorStoreManager(provider=PROVIDER)
