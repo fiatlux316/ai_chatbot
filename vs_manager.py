@@ -1,8 +1,7 @@
 import chromadb
-from es_embedding import Opensearch_Request
-from chroma_embedding_adapter import E5ChromaEmbeddings
+from embedding_adapter_opensearch import E5OpenSearchEmbeddings
+from embedding_adapter_chroma import E5ChromaEmbeddings
 import uuid
-
 
 class VectorStoreManager:
     def __init__(self, provider: str = "opensearch"):
@@ -12,7 +11,7 @@ class VectorStoreManager:
 
         if self.provider == "opensearch":
             print("Vector Store Provider로 OpenSearch가 선택되었습니다.")
-            self.vector_store_client = Opensearch_Request()
+            self.vector_store_client = E5OpenSearchEmbeddings()
         elif self.provider == "chroma":
             print("Vector Store Provider로 ChromaDB가 선택되었습니다.")
             # E5 임베딩 모델 적용
