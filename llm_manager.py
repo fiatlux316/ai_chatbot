@@ -64,8 +64,8 @@ class LLMManager:
 
 
     def _call_bedrock_claude(self, system_prompt: str, user_prompt: str) -> str:
-        print('_call_bedrock_claude - system_prompt :', system_prompt)
-        print('_call_bedrock_claude - user_prompt :', user_prompt)
+        #print('_call_bedrock_claude - system_prompt :', system_prompt)
+        print('_call_bedrock_claude - user_prompt :\n\n', user_prompt)
             
         response = self.llm_client.converse(
             modelId=self.bedrock_model_id,
@@ -100,8 +100,8 @@ class LLMManager:
             return "죄송합니다. 답변을 생성하는 중 오류가 발생했습니다." 
 
     def _call_gemini(self, system_prompt: str, user_prompt: str) -> str:
-        print('_call_gemini - system_prompt :', system_prompt)  
-        print('_call_gemini - user_prompt :', user_prompt)
+        #print('_call_gemini - system_prompt :', system_prompt)  
+        print('_call_gemini - user_prompt :\n\n', user_prompt)
         if not self.llm_client:
             raise Exception("Gemini 패키지가 설치되지 않았거나 구성되지 않았습니다.")
         

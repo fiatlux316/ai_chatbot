@@ -15,12 +15,11 @@ class VectorStoreManager:
         elif self.provider == "chroma":
             print("Vector Store Provider로 ChromaDB가 선택되었습니다.")
             # E5 임베딩 모델 적용
-            embedding_function = E5ChromaEmbeddings()
+            self._embedding_function = E5ChromaEmbeddings()
             self.vector_store_client = chromadb.PersistentClient(
                 path="./chroma_db",
                 settings=chromadb.config.Settings(anonymized_telemetry=False)
             )
-            self._embedding_function = embedding_function
         else:
             raise ValueError(f"지원하지 않는 Vector Store 제공자입니다: {provider}")    
         
