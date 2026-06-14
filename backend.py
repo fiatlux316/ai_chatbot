@@ -31,11 +31,12 @@ system_prompt = base_prompt + '\n\n' + cs_guide
 # 1. 프롬프트 템플릿 생성
 prompt = PromptTemplate.from_template(
     """
-    CS Guide : {system_prompt}
-    Chat history: {chat_history}
-    RAG Context : {retrieved_context}
+    Answer the Question based on the CS_Guide, retrieved RAG_Context, and Chat_history.
+
+    CS_Guide : {system_prompt}
+    Chat_history: {chat_history}
+    RAG_Context : {retrieved_context}
     Question: {question}
-    Answer the question based on the CS Guide, retrieved RAG context, and chat history.
     """
 )
 
