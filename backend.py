@@ -2,21 +2,19 @@ from typing import List
 from fastapi import FastAPI
 from pydantic import BaseModel
 import os
+from typing import Dict, List, Optional, Tuple
+from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 
-from dotenv import load_dotenv
-load_dotenv()
-
-from llm_manager import LLMManager
 from vs_manager import VectorStoreManager
-
-llm_manager = LLMManager(provider=os.getenv("LLM_MODEL", "claude"))
 vs_manager = VectorStoreManager(provider=os.getenv("VS_TYPE", "chroma"))
 
-query_history = []
-cs_guide = ''
+from llm import get_llm
+llm = get_llm()
 
-# Claude (Sonnet) 기본 프롬프트 구성 : 필요시 작성
-base_prompt = ""
+# 기본 프롬프트 구성
+base_prompt = "당신은 이마트 고객만족센터 7년 차 선임 매니저(32세)입니다. \n현장 경험이 풍부하여 상품권, 결제, 환불 규정에 능통하며, 고객의 문제를 스마트하고 노련하게 해결합니다."
+cs_guide = ''
 
 # Guide prompt content is loaded once at startup and reused for every request.
 try:
@@ -29,6 +27,23 @@ except FileNotFoundError:
 
 system_prompt = base_prompt + '\n\n' + cs_guide
 #print("system_prompt :", system_prompt)
+
+# 1. 프롬프트 템플릿 생성
+prompt = PromptTemplate.from_template(
+    """
+    CS Guide : {system_prompt}
+    Chat history: {chat_history}
+    RAG Context : {retrieved_context}
+    Question: {question}
+    Answer the question based on the CS Guide, retrieved RAG context, and chat history.
+    """
+)
+
+# 부분 질문을 합치기 위해 저장
+query_history = []
+
+# 과거 대화 기록을 저장하기 위한 리스트
+chat_history = []
 
 def chat(messages):
 
@@ -45,7 +60,6 @@ def chat(messages):
     # 고객요청 메세지를 최근 순으로 최대 지정된 갯수만큼 저장하여,  멀티턴 대화에 대응할 수 있도록 합니다.
     # 메제기가 넘어올때마다 저장하여 최근 대화 이력을 유지하는 방식으로, 고객의 추가 질문이나 보완 질문이 있을 때 이전 맥락을 고려하여 연속성 있는 답변을 제공할 수 있습니다.
     query_history.append(query)
-    #print("query_history :", query_history)
 
     # 최근 3개 질문을 하나의 스트링으로 저장 
     query = ' '.join(query_history[-3:])
@@ -69,18 +83,30 @@ def chat(messages):
             for chunk in chunks:
                 context_text += f'##참조문서_Chunk:\n{chunk}\n\n'
 
+            #print("context_text :", context_text)   
+
             if context_text == '' :
                 response = '죄송합니다. 질문에 대해서 적정한 답변이 준비되지 않았습니다. 문의 유형에 따라 아래 메뉴를 이용해 보세요 \n\n - 상품문의 : 상품검색 \n\n - AS관련 문의 : AS 문의 \n\n - 기타 : 매장전화문의'
                 print("response :", response)
             else :
-                user_prompt = f"[검색된 FAQ Context]\n{context_text}\n[사용자 질문]: {query}"
-                
-                # 모델을 변경하고 싶다면 model_provider 파라미터를 "chatgpt" 또는 "sonnet"으로 변경하세요.
-                response = llm_manager.generate_response(
-                    system_prompt, 
-                    user_prompt 
-                )
+                rendered = prompt.format(
+                    system_prompt=system_prompt,
+                    retrieved_context="[검색된 FAQ Context]\n\n" + context_text,
+                    question=query,
+                    chat_history=chat_history
+                )                
+                resp = llm.invoke(rendered)
+                text = resp.content if hasattr(resp, "content") else str(resp)
+                response = text.strip()
+
                 print("response :", response)
+
+                # 대화 기록에 현재 대화 추가
+                chat_history.append(HumanMessage(content=query))
+                chat_history.append(AIMessage(content=response))
+
+                #print("Updated chat_history:", chat_history)
+
 
     except Exception as e:
         err = str(e) #.split(" ")[0]

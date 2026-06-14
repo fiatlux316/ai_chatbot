@@ -1,5 +1,5 @@
 import os
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
+from langchain_community.document_loaders import PyPDFLoader, PyMuPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from dotenv import load_dotenv
@@ -21,7 +21,8 @@ def load_and_chunk_documents(doc_dir="docs", chunk_size=500, chunk_overlap=50):
  
         if filename.endswith(".pdf"):
             try:
-                loader = PyPDFLoader(file_path)
+                #loader = PyPDFLoader(file_path)
+                loader = PyMuPDFLoader(file_path)
                 documents.extend(loader.load())
                 print(f"Loaded PDF: {filename}")
             except Exception as e:
