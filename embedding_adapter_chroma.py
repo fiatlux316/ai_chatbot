@@ -28,9 +28,9 @@ class E5ChromaEmbeddings:
             # 리스트 형태
             embeddings = []
             for text in input:
-                print(f"Embedding text: {text[:30]}...")  # 임베딩할 텍스트 일부 출력
+                #print(f"Embedding text: {text[:30]}...")  # 임베딩할 텍스트 일부 출력
                 embedding = self.embedder.embed_query(text)
-                print(f"Embedding vector (first 5 values): {embedding[:5]}")  # 임베딩 벡터 일부 출력
+                #print(f"Embedding vector (first 5 values): {embedding[:5]}")  # 임베딩 벡터 일부 출력
                 embeddings.append(embedding.tolist())
             return embeddings
         else:
