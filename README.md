@@ -29,7 +29,7 @@ FAQ 문서 및 스타일 가이드 기반으로 질문에 대한 답변을 LLM �
 - BEDROCK_TOP_K=1   # 1~5 사이 권장 (작을수록  엄격한 결정성,  항상 최빈 토큰 선택)
 
 
-## FAQ 임베딩 등록 : insert_chunks.py
+## FAQ 임베딩 등록
 - Vector Store 설정 (환경변수) : opensearch or chroma
 - FAQ 추가 : docs/faq.txt
 - chuck 단위 임베딩 등록 : ./create_index.sh
