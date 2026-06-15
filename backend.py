@@ -19,6 +19,7 @@ class Turn(BaseModel):
 
 class Messages(BaseModel):
     messages: List[Turn]  
+    uuid: str
 
 app = FastAPI()
 
@@ -50,43 +51,41 @@ prompt = PromptTemplate.from_template(
     """
 )
 
-# 부분 질문을 합치기 위해 저장
-query_history = []
+# 사용자별 부분 질문 기록
+query_histories: Dict[str, List[str]] = {}
 
 # 과거 대화 기록을 저장하기 위한 리스트
-chat_history = []
+chat_histories: Dict[str, List] = {}
 
-def get_final_prompt(messages: Messages) -> str:
-
-    messages_list = messages.dict()['messages']
-    #print("====> messages_list :", messages_list)
+def get_final_prompt(query: str, uuid: str) -> str:
 
     brand_id = 'EM'
     index = brand_id + '_chunk'
-    response = None
 
-    query = messages_list[-1]['content'] # 대화 이력 중 가장 마지막 메시지(최신 질문)를 가져옵니다.
     print("query :", query)
+
+    # UUID별 기록을 가져오거나 새로 생성합니다.
+    user_query_history = query_histories.setdefault(uuid, [])
+    user_chat_history = chat_histories.setdefault(uuid, [])
 
     # 메제기가 넘어올때마다 저장하여 최근 대화 이력을 유지하는 방식으로, 
     # 고객의 추가 질문이나 보완 질문이 있을 때 이전 맥락을 고려하여 연속성 있는 답변을 제공할 수 있습니다.
-    query_history.append(query)
+    user_query_history.append(query)
 
     # 최근 3개 질문을 하나의 스트링으로 저장 
-    query = ' '.join(query_history[-3:])
-    print("query_final :", query)
+    query_final = ' '.join(user_query_history[-3:])
+    print("query_final :", query_final)
 
     try:    
-        # provider 파라미터를 "opensearch" 또는 "chroma"로 변경하여 검색 DB를 전환할 수 있습니다.
         chunks = vs_manager.search_chunks(
-            query=query.lower(), 
-            index_name=index, 
+            query=query.lower(),
+            index_name=index,
             top_k=3
         )
         
         #print("chunks :", chunks)
         if not chunks:
-            response = "죄송합니다. 일치하는 FAQ 항목이 없습니다"
+            response = "죄송합니다. 일치하는 FAQ 항목이 없습니다" 
             print(f"response : {response}")
             return None
             
@@ -94,14 +93,15 @@ def get_final_prompt(messages: Messages) -> str:
             context_text = ''
             for chunk in chunks:
                 context_text += f'##참조문서_Chunk:\n{chunk}\n\n'
-            print("context_text :", context_text)
+            #print("context_text :", context_text)
             rendered = prompt.format(
                 system_prompt=system_prompt,
                 retrieved_context="[검색된 FAQ Context]\n\n" + context_text,
-                question=query,
-                chat_history=chat_history
+                question=query_final,
+                chat_history=user_chat_history
             ) 
-            chat_history.append(HumanMessage(content=query))
+            user_chat_history.append(HumanMessage(content=query_final))
+            #chat_histories[uuid].append(HumanMessage(content=query_final))
             return rendered 
 
     except Exception as e:
@@ -114,9 +114,10 @@ def get_final_prompt(messages: Messages) -> str:
 @app.post("/chat", response_model=Turn)
 def chat(messages: Messages) :
     
-    print("chat :", messages)
+    query = messages.messages[-1].content
+    uuid = messages.uuid
 
-    final_prompt = get_final_prompt(messages)
+    final_prompt = get_final_prompt(query, uuid)
     if final_prompt is None:
         return {"role": "assistant", "content": "죄송합니다. 질문에 대해서 적정한 답변이 준비되지 않았습니다"}   
 
@@ -127,8 +128,8 @@ def chat(messages: Messages) :
     print("response :", response)
 
     # 대화 기록에 현재 대화 추가
-    chat_history.append(AIMessage(content=response))
-    #print("Updated chat_history:", chat_history)
+    chat_histories[uuid].append(AIMessage(content=response))
+    print(f"Updated chat_history for {uuid}:", chat_histories[uuid])
 
     return {"role": "assistant", "content": response}
 
@@ -136,12 +137,17 @@ def chat(messages: Messages) :
 @app.post("/chat_stream", response_model=Turn)
 def chat_stream(messages: Messages) :
 
-    print("chat_stream :", messages)
+    query = messages.messages[-1].content
+    uuid = messages.uuid
+    print("query :", query)
+    print("uuid :", uuid)
+
     def generate():
 
-        final_prompt = get_final_prompt(messages)
+        final_prompt = get_final_prompt(query, uuid)
         if final_prompt is None:
-            return {"role": "assistant", "content": "죄송합니다. 질문에 대해서 적정한 답변이 준비되지 않았습니다"}   
+            yield "죄송합니다. 질문에 대해서 적정한 답변이 준비되지 않았습니다"
+            return
     
         # stream 방식 (토큰 단위로 스트리밍)
         full_response = ""
@@ -153,7 +159,7 @@ def chat_stream(messages: Messages) :
         print("response :", response)
 
         # 대화 기록에 현재 대화 추가
-        chat_history.append(AIMessage(content=response))
-        print("Updated chat_history:", chat_history)
+        chat_histories[uuid].append(AIMessage(content=response))
+        print(f"Updated chat_history for {uuid}:", chat_histories[uuid])
 
     return StreamingResponse(generate(), media_type="text/event-stream")

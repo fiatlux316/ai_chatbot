@@ -3,9 +3,18 @@ from streamlit_chat import message
 import requests
 from dotenv import load_dotenv
 import os
+import uuid 
+
 load_dotenv()
 
 response_mode = os.getenv("RESPONSE_MODE")
+
+# 접속자의 고유세션 형성 (uuid)
+if 'UUID' not in st.session_state:
+    st.session_state['UUID'] = str(uuid.uuid4())
+UUID = st.session_state['UUID']
+#print("UUID :", UUID)
+#print("st.session_state :", st.session_state)
 
 # Initialize chat history
 if 'messages' not in st.session_state:
@@ -21,10 +30,12 @@ def chat(text):
     #print(st.session_state['pre_messages'])
     prev_text = st.session_state['pre_messages'][-1]
     print('prev_text :'+prev_text)
-    full_text = text
-    print('full_text :'+full_text)
-    user_turn = {"role": "user", "content": full_text}
-    resp = requests.post(chat_url, json={"messages": [user_turn]})
+    #full_text = text
+    print('text :'+text)
+    user_turn = {"role": "user", "content": text}
+    resp = requests.post(chat_url, 
+                         json={"messages": [user_turn], "uuid": UUID}
+                         )
     assistant_turn = resp.json()
 
     st.session_state['pre_messages'].append(text)
@@ -56,22 +67,22 @@ if prompt := st.chat_input("안녕하세요. 무엇을 도와드릴까요?"):
 
     if response_mode == "stream":
         # stream 방식 (토큰 단위로 스트리밍)
-        full_response = ""
+        response = ""
         with st.chat_message("assistant"):
             placeholder = st.empty()
             full_response = ""
 
             user_turn = {"role": "user", "content": prompt}
-            response = requests.post(chat_url + "_stream", 
-                                    json={"messages": [user_turn]}, 
+            res_stream = requests.post(chat_url + "_stream", 
+                                    json={"messages": [user_turn], "uuid": UUID}, 
                                     stream=True)
-            for chunk in response.iter_content(decode_unicode=True):
+            for chunk in res_stream.iter_content(decode_unicode=True):
                 if chunk:
-                    full_response += chunk
-                    placeholder.markdown(full_response + "▌")
+                    response += chunk
+                    placeholder.markdown(response + "▌")
 
-            placeholder.markdown(full_response)
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            placeholder.markdown(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
 
     elif response_mode == "normal":
         # 결과를 한번에 출력
