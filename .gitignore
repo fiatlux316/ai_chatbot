@@ -7,4 +7,4 @@ multilingual-e5-large-quantized/
 .env
 .ipynb_checkpoints/
 .venv
-
+ai_chatbot.egg-info/
