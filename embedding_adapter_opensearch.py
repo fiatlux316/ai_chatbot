@@ -6,12 +6,15 @@ from embedding_model import E5QEmbeddings
 import requests
 import json
 
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 open_search_url = {
     "local": "",
-    "dev": "vpc-dev-apne2-erody-search-vmaetfnjqtuhscfl3spvc6zhmm.ap-northeast-2.es.amazonaws.com",
-    "stg": "vpc-dev-apne2-erody-search-vmaetfnjqtuhscfl3spvc6zhmm.ap-northeast-2.es.amazonaws.com", # 비용문제로 stg opensearch 삭제
-    "prd": "vpc-prd-apne2-erody-search-iny3phj6yhlz6kfgqsiyrtn7cq.ap-northeast-2.es.amazonaws.com"
+    "dev": os.getenv("OPENSEARCH_HOST_DEV"),
+    "stg": os.getenv("OPENSEARCH_HOST_STG"),
+    "prd": os.getenv("OPENSEARCH_HOST_PRD")
 }
 
 class Base_Request():
@@ -51,9 +54,10 @@ class Base_Request():
 class E5OpenSearchEmbeddings(Base_Request):
     def __init__(self):
         env = 'dev' #config.ENV
-        self.open_search_id = "admin"
-        self.open_search_pw = "Admin12%23"  # 특수문자 인코딩
+        self.open_search_id = os.getenv("OPENSEARCH_USER")
+        self.open_search_pw = os.getenv("OPENSEARCH_PASSWORD")
         self.open_search_url = open_search_url[env]
+        #print(f"OpenSearch URL: {self.open_search_url}")
 
         self.embedder = E5QEmbeddings()
 

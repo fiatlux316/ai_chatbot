@@ -23,7 +23,6 @@ def get_llm():
                 model=f"bedrock:{os.getenv('BEDROCK_MODEL')}",
                 region_name=os.getenv('BEDROCK_REGION', 'ap-southeast-2'),
                 temperature=0.0,
-                top_p=0.1,
                 max_tokens=8000,
                 model_kwargs=model_kwargs
             )

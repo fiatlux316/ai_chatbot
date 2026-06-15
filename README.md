@@ -27,7 +27,12 @@ FAQ 문서 및 스타일 가이드 기반으로 질문에 대한 답변을 LLM �
 - AWS_ACCESS_KEY_ID="xxxx"
 - AWS_SECRET_ACCESS_KEY="xxxx"
 - BEDROCK_TOP_K=1   # 1~5 사이 권장 (작을수록  엄격한 결정성,  항상 최빈 토큰 선택)
-
+5. OpenSearch 관련 설정
+- OPENSEARCH_HOST_DEV="vpc-dev-apne2-erody-search-vmaetfnjqtuhscfl3spvc6zhmm.ap-northeast-2.es.amazonaws.com"
+- OPENSEARCH_HOST_STG="vpc-dev-apne2-erody-search-vmaetfnjqtuhscfl3spvc6zhmm.ap-northeast-2.es.amazonaws.com"
+- OPENSEARCH_HOST_PRD="vpc-prd-apne2-erody-search-iny3phj6yhlz6kfgqsiyrtn7cq.ap-northeast-2.es.amazonaws.com"
+- OPENSEARCH_USER="xxxx"
+- OPENSEARCH_PASSWORD="xxxx"
 
 ## FAQ 임베딩 등록
 - Vector Store 설정 (환경변수) : opensearch or chroma
