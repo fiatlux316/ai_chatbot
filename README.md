@@ -15,6 +15,7 @@ FAQ 문서 및 스타일 가이드 기반으로 질문에 대한 답변을 LLM �
 1. 공통
 - LLM_MODEL="claude" #claude, chatgpt, gemini
 - VS_TYPE="chroma" #opensearch, chroma
+- RESPONSE_MODE="stream" #normal, stream
 2. Gemini 관련 설정
 - GEMINI_MODEL="gemini-2.5-flash" #gemini-2.5-flash, gemini-2.5-pro
 - GEMINI_API_KEY="xxxx"
