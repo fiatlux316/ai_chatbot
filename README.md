@@ -32,7 +32,7 @@ FAQ 문서 및 스타일 가이드 기반으로 질문에 대한 답변을 LLM �
 ## FAQ 임베딩 등록 : insert_chunks.py
 - Vector Store 설정 (환경변수) : opensearch or chroma
 - FAQ 추가 : docs/faq.txt
-- chuck 단위 임베딩 등록 : uv run insert_chunks.py
+- chuck 단위 임베딩 등록 : ./create_index.sh
 
 ## 답변 가이드 설정 : docs/guide.md
 - 챗봇 답변 스타일/제약 사항 등을 markdown 형태로 작성
