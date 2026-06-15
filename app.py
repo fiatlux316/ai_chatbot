@@ -1,6 +1,11 @@
 import streamlit as st
 from streamlit_chat import message
 import requests
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
+response_mode = os.getenv("RESPONSE_MODE")
 
 # Initialize chat history
 if 'messages' not in st.session_state:
@@ -16,7 +21,6 @@ def chat(text):
     #print(st.session_state['pre_messages'])
     prev_text = st.session_state['pre_messages'][-1]
     print('prev_text :'+prev_text)
-    #full_text = prev_text + ' ' + text
     full_text = text
     print('full_text :'+full_text)
     user_turn = {"role": "user", "content": full_text}
@@ -25,6 +29,7 @@ def chat(text):
 
     st.session_state['pre_messages'].append(text)
     return assistant_turn['content']
+
 
 row1 = st.container()
 col1, col2 = st.columns([6,4])
@@ -49,9 +54,32 @@ if prompt := st.chat_input("안녕하세요. 무엇을 도와드릴까요?"):
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    response = chat(prompt)
-    # Display assistant response in chat message container
-    with st.chat_message("assistant"):
-        st.markdown(response)
-    # Add assistant response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    if response_mode == "stream":
+        # stream 방식 (토큰 단위로 스트리밍)
+        full_response = ""
+        with st.chat_message("assistant"):
+            placeholder = st.empty()
+            full_response = ""
+
+            user_turn = {"role": "user", "content": prompt}
+            response = requests.post(chat_url + "_stream", 
+                                    json={"messages": [user_turn]}, 
+                                    stream=True)
+            for chunk in response.iter_content(decode_unicode=True):
+                if chunk:
+                    full_response += chunk
+                    placeholder.markdown(full_response + "▌")
+
+            placeholder.markdown(full_response)
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+    elif response_mode == "normal":
+        # 결과를 한번에 출력
+        response = chat(prompt)
+        with st.chat_message("assistant"):
+            st.markdown(response)
+
+        st.session_state.messages.append({"role": "assistant", "content": response})
+
+    else:
+        st.error("지원하지 않는 응답 모드입니다. 환경변수 RESPONSE_MODE를 확인하세요.")
