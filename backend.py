@@ -56,10 +56,7 @@ query_history = []
 # 과거 대화 기록을 저장하기 위한 리스트
 chat_history = []
 
-@app.post("/chat", response_model=Turn)
-def chat(messages: Messages) :
-    
-    print("chat :", messages)
+def get_final_prompt(messages: Messages) -> str:
 
     messages_list = messages.dict()['messages']
     #print("====> messages_list :", messages_list)
@@ -71,8 +68,8 @@ def chat(messages: Messages) :
     query = messages_list[-1]['content'] # 대화 이력 중 가장 마지막 메시지(최신 질문)를 가져옵니다.
     print("query :", query)
 
-    # 고객요청 메세지를 최근 순으로 최대 지정된 갯수만큼 저장하여,  멀티턴 대화에 대응할 수 있도록 합니다.
-    # 메제기가 넘어올때마다 저장하여 최근 대화 이력을 유지하는 방식으로, 고객의 추가 질문이나 보완 질문이 있을 때 이전 맥락을 고려하여 연속성 있는 답변을 제공할 수 있습니다.
+    # 메제기가 넘어올때마다 저장하여 최근 대화 이력을 유지하는 방식으로, 
+    # 고객의 추가 질문이나 보완 질문이 있을 때 이전 맥락을 고려하여 연속성 있는 답변을 제공할 수 있습니다.
     query_history.append(query)
 
     # 최근 3개 질문을 하나의 스트링으로 저장 
@@ -90,41 +87,48 @@ def chat(messages: Messages) :
         #print("chunks :", chunks)
         if not chunks:
             response = "죄송합니다. 일치하는 FAQ 항목이 없습니다"
-            print("response :", response)
+            print(f"response : {response}")
+            return None
             
         else :
             context_text = ''
             for chunk in chunks:
                 context_text += f'##참조문서_Chunk:\n{chunk}\n\n'
-
-            #print("context_text :", context_text)   
-
-            if context_text == '' :
-                response = '죄송합니다. 질문에 대해서 적정한 답변이 준비되지 않았습니다. 문의 유형에 따라 아래 메뉴를 이용해 보세요 \n\n - 상품문의 : 상품검색 \n\n - AS관련 문의 : AS 문의 \n\n - 기타 : 매장전화문의'
-                print("response :", response)
-            else :
-                rendered = prompt.format(
-                    system_prompt=system_prompt,
-                    retrieved_context="[검색된 FAQ Context]\n\n" + context_text,
-                    question=query,
-                    chat_history=chat_history
-                )                
-                # invoke 방식 (한 번에 전체 응답)
-                resp = llm.invoke(rendered)
-                text = resp.content if hasattr(resp, "content") else str(resp)
-                response = text.strip()
-                print("response :", response)
-
-                # 대화 기록에 현재 대화 추가
-                chat_history.append(HumanMessage(content=query))
-                chat_history.append(AIMessage(content=response))
-                #print("Updated chat_history:", chat_history)
+            print("context_text :", context_text)
+            rendered = prompt.format(
+                system_prompt=system_prompt,
+                retrieved_context="[검색된 FAQ Context]\n\n" + context_text,
+                question=query,
+                chat_history=chat_history
+            ) 
+            chat_history.append(HumanMessage(content=query))
+            return rendered 
 
     except Exception as e:
         err = str(e) #.split(" ")[0]
-        print(f"Error occurred: {err}")
         response = "예기치 않은 에러가 발생했습니다.  잠시 후  다시 시도해 주세요." + '\n' + f'(에러: {err})'
-        pass
+        print(f"response : {response}")
+        return None
+
+
+@app.post("/chat", response_model=Turn)
+def chat(messages: Messages) :
+    
+    print("chat :", messages)
+
+    final_prompt = get_final_prompt(messages)
+    if final_prompt is None:
+        return {"role": "assistant", "content": "죄송합니다. 질문에 대해서 적정한 답변이 준비되지 않았습니다"}   
+
+    # invoke 방식 (한 번에 전체 응답)
+    resp = llm.invoke(final_prompt)
+    text = resp.content if hasattr(resp, "content") else str(resp)
+    response = text.strip()
+    print("response :", response)
+
+    # 대화 기록에 현재 대화 추가
+    chat_history.append(AIMessage(content=response))
+    #print("Updated chat_history:", chat_history)
 
     return {"role": "assistant", "content": response}
 
@@ -135,82 +139,21 @@ def chat_stream(messages: Messages) :
     print("chat_stream :", messages)
     def generate():
 
-        messages_list = messages.dict()['messages']
-        print("messages_list :", messages_list)
+        final_prompt = get_final_prompt(messages)
+        if final_prompt is None:
+            return {"role": "assistant", "content": "죄송합니다. 질문에 대해서 적정한 답변이 준비되지 않았습니다"}   
+    
+        # stream 방식 (토큰 단위로 스트리밍)
+        full_response = ""
+        for chunk in llm.stream(final_prompt):
+            full_response += chunk.content
+            yield chunk.content
 
-        brand_id = 'EM'
-        index = brand_id + '_chunk'
-        response = None
+        response = full_response.strip()
+        print("response :", response)
 
-        query = messages_list[-1]['content'] # 대화 이력 중 가장 마지막 메시지(최신 질문)를 가져옵니다.
-        print("query :", query)
-
-        # 고객요청 메세지를 최근 순으로 최대 지정된 갯수만큼 저장하여,  멀티턴 대화에 대응할 수 있도록 합니다.
-        # 메제기가 넘어올때마다 저장하여 최근 대화 이력을 유지하는 방식으로, 고객의 추가 질문이나 보완 질문이 있을 때 이전 맥락을 고려하여 연속성 있는 답변을 제공할 수 있습니다.
-        query_history.append(query)
-
-        # 최근 3개 질문을 하나의 스트링으로 저장 
-        query = ' '.join(query_history[-3:])
-        print("query_final :", query)
-
-        try:    
-            # provider 파라미터를 "opensearch" 또는 "chroma"로 변경하여 검색 DB를 전환할 수 있습니다.
-            chunks = vs_manager.search_chunks(
-                query=query.lower(), 
-                index_name=index, 
-                top_k=3
-            )
-            
-            #print("chunks :", chunks)
-            if not chunks:
-                response = "죄송합니다. 일치하는 FAQ 항목이 없습니다"
-                print("response :", response)
-                
-            else :
-                context_text = ''
-                for chunk in chunks:
-                    context_text += f'##참조문서_Chunk:\n{chunk}\n\n'
-
-                #print("context_text :", context_text)   
-
-                if context_text == '' :
-                    response = '죄송합니다. 질문에 대해서 적정한 답변이 준비되지 않았습니다. 문의 유형에 따라 아래 메뉴를 이용해 보세요 \n\n - 상품문의 : 상품검색 \n\n - AS관련 문의 : AS 문의 \n\n - 기타 : 매장전화문의'
-                    yield response
-                    print("response :", response)
-                else :
-                    rendered = prompt.format(
-                        system_prompt=system_prompt,
-                        retrieved_context="[검색된 FAQ Context]\n\n" + context_text,
-                        question=query,
-                        chat_history=chat_history
-                    )     
-
-                    # stream 방식 (토큰 단위로 스트리밍)
-                    full_response = ""
-                    for chunk in llm.stream(rendered):
-                        full_response += chunk.content
-                        yield chunk.content
-
-                    response = full_response.strip()
-                    print("response :", response)
-
-                    # 대화 기록에 현재 대화 추가
-                    chat_history.append(HumanMessage(content=query))
-                    chat_history.append(AIMessage(content=response))
-
-                    #print("Updated chat_history:", chat_history)
-
-        except Exception as e:
-            err = str(e) #.split(" ")[0]
-            print(f"Error occurred: {err}")
-            response = "예기치 않은 에러가 발생했습니다.  잠시 후  다시 시도해 주세요." + '\n' + f'(에러: {err})'
-            pass
+        # 대화 기록에 현재 대화 추가
+        chat_history.append(AIMessage(content=response))
+        print("Updated chat_history:", chat_history)
 
     return StreamingResponse(generate(), media_type="text/event-stream")
-    #return {"role": "assistant", "content": response}
-
-# @app.post("/chat", response_model=Turn)
-# def post_chat(messages: Messages):
-#     messages = messages.dict()
-#     assistant_turn = chat(messages=messages['messages'])
-#     return assistant_turn
