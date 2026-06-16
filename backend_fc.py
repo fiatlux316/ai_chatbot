@@ -49,7 +49,7 @@ SYSTEM_PROMPT_FOR_AGENT = """당신은 쇼핑몰 고객 지원 도우미입니�
 
 1. 고객 프로필, 주문 내역, 배송 상태, 포인트, 결제 정보 등에 관한 질문은 반드시 도구를 호출하여 답변합니다.
 2. 이전 대화 맥락을 참고하여 일관된 답변을 제공합니다.
-3. 고객의 문의에 친절하고 전문적으로 응대합니다.
+3. 만약 이전 대화가 없는 최초의 질문인 경우에는  고객 프로필, 주문내역 기반으로 가볍게 인사를 건넵니다.
 4. ID 형식을 정확히 사용하십시오.
 5. 현재 로그인한 사용자의 ID는 C001로 가정합니다.
 """
@@ -176,13 +176,13 @@ def get_final_prompt(query: str, uuid: str) -> str:
 
     # 최근 3개 질문을 하나의 스트링으로 저장 
     query_final = ' '.join(user_query_history[-3:])
+    #query_final = query
     print("\n>>>>> query_final :", query_final)
 
     try:    
         # tool_calls 가 존재하는 경우
         func_call_result, execution_log = conversation_manager.process_message(query)
-        #print("func_call_result :", func_call_result)
-        print("\n>>>>> execution_log :\n", execution_log)
+        print("\n>>>>> function_call_log :\n", execution_log)
         
         # tool_calls 과 상관없이 질문에 대한 FAQ 검색
         chunks = vs_manager.search_chunks(
@@ -201,15 +201,15 @@ def get_final_prompt(query: str, uuid: str) -> str:
             context_text = ''
             for chunk in chunks:
                 context_text += f'##참조문서_Chunk:\n{chunk}\n\n'
-            #print("context_text :", context_text)
+            print("\n>>>>> rag_context:\n", context_text)
             rendered = prompt.format(
                 system_prompt=system_prompt,
                 func_call_result=func_call_result,
                 retrieved_context="[검색된 FAQ Context]\n\n" + context_text,
-                question=query_final,
+                question=query,
                 chat_history=user_chat_history
             ) 
-            user_chat_history.append(HumanMessage(content=query_final))
+            user_chat_history.append(HumanMessage(content=query))
             #chat_histories[uuid].append(HumanMessage(content=query_final))
             return rendered 
 
