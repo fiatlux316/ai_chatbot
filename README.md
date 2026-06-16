@@ -4,9 +4,11 @@ FAQ 문서 및 스타일 가이드 기반으로 질문에 대한 답변을 LLM �
 
 ## 개발 환경 설정
 
-1. UV (파이썬 프로젝트 관리도구) 설치
+1. python 3.13 설치
+- brew install python@3.13
+2. UV (파이썬 프로젝트 관리도구) 설치
 - brew install uv
-2. 설치할 패키지 등록 및 가상환경 설정
+3. 설치할 패키지 등록 및 가상환경 설정
 - pyproject.toml
 - uv sync
 
