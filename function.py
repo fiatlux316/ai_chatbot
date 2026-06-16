@@ -400,7 +400,7 @@ def get_popular_products(category: str = None, period: str = "month") -> str:
 # Step10. 매장 시설물 조회 함수
 @tool
 def search_facility(keyword: str = None, floor: str = None) -> str:
-    """키워드로 매장 편의시설, 시설물을 검색합니다. 전체 시설물을 원하면 keyword, floor를 입력하지 마세요."""
+    """키워드로 매장 편의시설, 시설물을 검색합니다. keyword, floor를 입력하지 않고 질문하면 전체 편의시설을 검색합니다."""
     df = store_facility_df.copy()
 
     if keyword:
