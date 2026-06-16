@@ -48,7 +48,7 @@ col1, col2 = st.columns([6,4])
 with row1:
     with col1:
         st.title("AI 상담 서비스")
-        st.markdown("**나만의 쇼핑 에이전트 AI 챗봇입니다.** \n\r **서비스/영업 관련 전반적인 문의 및 주문/배송/상품/포인트/프로모션/편의시설 등 무엇이든 물어보세요!**")
+        st.markdown("**나만의 쇼핑 에이전트 AI 챗봇입니다.** \n\r **주문/배송/상품/포인트/프로모션/편의시설 및 매장내 서비스 관련 전반적인 것에 대해서 무엇이든 물어보세요!**")
     with col2:
         st.image('./erody_ai.png', width=200)
 
