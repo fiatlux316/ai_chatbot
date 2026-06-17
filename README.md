@@ -53,7 +53,7 @@ FAQ 문서 및 스타일 가이드 기반으로 질문에 대한 답변을 LLM �
 - LLM_MODEL : claude or gemini or chatgpt
 
 2. 서비스 기동
-- 백엔드 : ./start_api.sh
+- 백엔드 : ./start_api_fc.sh
 - 프론트 : ./start_st.sh
 
 ## 문의
